@@ -1,0 +1,17 @@
+# Xcode user data
+*.xcuserstate
+xcuserdata/
+
+# Local app configuration
+Flippers/Config.plist
+Flippers/GoogleService-Info.plist
+
+# Repo-local skill automation
+.claude/tools/
+.claude/tests/
+.claude/skills/
+.claude/skill-automation-package.json
+.hermes/
+.omc/
+AGENTS.md
+CLAUDE.md
