@@ -466,6 +466,75 @@ struct FirebaseAuthErrorMappingTests {
     }
 }
 
+@MainActor
+struct PresetImportServiceTests {
+
+    private func makeModelContext() throws -> ModelContext {
+        let schema = Schema([
+            User.self,
+            Deck.self,
+            DeckSection.self,
+            Card.self,
+            CardField.self,
+            SRSState.self,
+            ReviewLog.self,
+            OCRSource.self,
+        ])
+        let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+        let container = try ModelContainer(for: schema, configurations: [config])
+        return ModelContext(container)
+    }
+
+    @Test func defaultVocabularyPreset_hasRequiredFrontHintAndBackFields() {
+        let preset = DefaultPresetCatalog.basicVocabularyStarter
+
+        #expect(preset.cards.count == 10)
+        #expect(preset.expectedCardCount == 10)
+
+        for card in preset.cards {
+            #expect(card.type == .word)
+            #expect(card.fields.contains { $0.name == "word" && !$0.value.isEmpty })
+            #expect(card.fields.contains { $0.name == "reading" && !$0.value.isEmpty })
+            #expect(card.fields.contains { $0.name == "meaning" && !$0.value.isEmpty })
+            #expect(card.fields.contains { $0.name == "example" && !$0.value.isEmpty })
+        }
+    }
+
+    @Test func importPreset_createsDeckCardsSRSAndSkipsDuplicates() throws {
+        let context = try makeModelContext()
+        let preset = DefaultPresetCatalog.basicVocabularyStarter
+
+        let firstResult = PresetImportService.importPreset(
+            preset,
+            into: context,
+            existingCards: []
+        )
+
+        var cards = try context.fetch(FetchDescriptor<Card>())
+        var decks = try context.fetch(FetchDescriptor<Deck>())
+        #expect(firstResult.createdCount == preset.cards.count)
+        #expect(firstResult.skippedCount == 0)
+        #expect(cards.count == preset.cards.count)
+        #expect(decks.count == 1)
+        #expect(cards.allSatisfy { $0.createdSource == .imported })
+        #expect(cards.allSatisfy { $0.presetVersion == preset.version })
+        #expect(cards.allSatisfy { $0.srsState != nil })
+
+        let secondResult = PresetImportService.importPreset(
+            preset,
+            into: context,
+            existingCards: cards
+        )
+
+        cards = try context.fetch(FetchDescriptor<Card>())
+        decks = try context.fetch(FetchDescriptor<Deck>())
+        #expect(secondResult.createdCount == 0)
+        #expect(secondResult.skippedCount == preset.cards.count)
+        #expect(cards.count == preset.cards.count)
+        #expect(decks.count == 1)
+    }
+}
+
 struct OCRRowParserTests {
 
     @Test func parser_handlesShiftedColumnsUsingScriptHints() {

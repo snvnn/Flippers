@@ -8,13 +8,16 @@
 `docs` 디렉터리는 이제 현재 시점에서 바로 참고해야 하는 문서만 앞에 두고, 이전 리뷰 기록과 작업 로그는 아카이브로 분리한다.
 ## 현재 참고 순서
 
-1. `docs/plans/2026-04-21-flippers-master-plan.md`
-2. `docs/Current/Flippers-Current-Priorities-2026-04-06.md`
-3. `docs/Current/Flippers-Current-Status-2026-04-06.md`
-4. `docs/Current/Flippers-Release-Privacy-Summary-2026-04-06.md`
-5. `docs/operations/2026-04-21-flippers-ocr-proxy-runbook.md`
-6. `SRS.md`
-7. 필요 시 `CLAUDE.md`
+1. `docs/Current/Flippers-Next-Steps-2026-05-13.md`
+2. `docs/release/2026-04-21-flippers-release-readiness-checklist.md`
+3. `docs/release/2026-04-24-flippers-release-blocker-followup-plan.md`
+4. `docs/plans/2026-04-21-flippers-master-plan.md`
+5. `docs/plans/2026-05-13-jouyou-kanji-default-preset-plan.md`
+6. `docs/Current/Flippers-Current-Priorities-2026-04-06.md`
+7. `docs/Current/Flippers-Current-Status-2026-04-06.md`
+8. `docs/Current/Flippers-Release-Privacy-Summary-2026-04-06.md`
+9. `docs/operations/2026-04-21-flippers-ocr-proxy-runbook.md`
+10. 필요 시 `CLAUDE.md`
 
 ## 아카이브 사용 규칙
 

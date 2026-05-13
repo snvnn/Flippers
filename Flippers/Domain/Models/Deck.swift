@@ -2,7 +2,7 @@ import Foundation
 import SwiftData
 
 @Model
-final class Deck {
+final class Deck: Identifiable {
     var id: UUID = UUID()
     var name: String = ""
     var createdAt: Date = Date()

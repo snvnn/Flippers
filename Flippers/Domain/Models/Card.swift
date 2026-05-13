@@ -39,11 +39,14 @@ enum CreatedSource: String, Codable {
 }
 
 @Model
-final class Card {
+final class Card: Identifiable {
     var id: UUID = UUID()
     var typeRaw: String = CardType.word.rawValue
     var createdSourceRaw: String = CreatedSource.manual.rawValue
     var createdAt: Date = Date()
+    var presetID: String?
+    var presetVersion: Int?
+    var sourceLabel: String?
 
     var deck: Deck?
     var section: DeckSection?
@@ -80,18 +83,43 @@ final class Card {
         fields.first { $0.fieldName == name }?.fieldValue
     }
 
+    func normalizedField(named name: String) -> String? {
+        guard let value = field(named: name)?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !value.isEmpty else {
+            return nil
+        }
+        return value
+    }
+
     var primaryDisplayValue: String {
         switch type {
-        case .word:  return field(named: "word")  ?? ""
-        case .kanji: return field(named: "kanji") ?? ""
+        case .word:  return normalizedField(named: "word")  ?? ""
+        case .kanji: return normalizedField(named: "kanji") ?? ""
         }
     }
 
     var readingValue: String? {
-        field(named: "reading")
+        normalizedField(named: "reading")
     }
 
     var meaningValue: String? {
-        field(named: "meaning")
+        normalizedField(named: "meaning")
+    }
+
+    var exampleValue: String? {
+        normalizedField(named: "example")
+    }
+
+    var studyReadingHint: String? {
+        switch type {
+        case .word:
+            return readingValue
+        case .kanji:
+            let parts = [
+                normalizedField(named: "kunyomi").map { "訓読み \($0)" },
+                normalizedField(named: "onyomi").map { "音読み \($0)" },
+            ].compactMap { $0 }
+            return parts.isEmpty ? nil : parts.joined(separator: " · ")
+        }
     }
 }

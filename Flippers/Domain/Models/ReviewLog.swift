@@ -2,7 +2,7 @@ import Foundation
 import SwiftData
 
 @Model
-final class ReviewLog {
+final class ReviewLog: Identifiable {
     var id: UUID = UUID()
     var ratingRaw: String = Rating.good.rawValue
     var reviewedAt: Date = Date()

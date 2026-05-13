@@ -98,9 +98,15 @@ private struct StudyFlashcardView: View {
     let session: StudySession
     let onRate: (Rating) -> Void
 
+    @GestureState private var isPressingForReading = false
+
     var body: some View {
         ZStack {
-            CardFaceView(card: card, isFront: true)
+            CardFaceView(
+                card: card,
+                isFront: true,
+                showReading: session.showReading || isPressingForReading
+            )
                 .rotation3DEffect(
                     .degrees(session.isFlipped ? 180 : 0),
                     axis: (x: 0, y: 1, z: 0)
@@ -120,11 +126,7 @@ private struct StudyFlashcardView: View {
                 session.flip()
             }
         }
-        .onLongPressGesture(minimumDuration: 0.5) {
-            withAnimation(.easeInOut(duration: 0.2)) {
-                session.showReading.toggle()
-            }
-        }
+        .simultaneousGesture(readingHintGesture)
         .gesture(
             DragGesture()
                 .onChanged { value in
@@ -147,6 +149,14 @@ private struct StudyFlashcardView: View {
         )
         .offset(x: session.isFlipped ? session.dragOffset * 0.4 : 0)
     }
+
+    private var readingHintGesture: some Gesture {
+        LongPressGesture(minimumDuration: 0.35)
+            .updating($isPressingForReading) { currentValue, state, _ in
+                guard !session.isFlipped else { return }
+                state = currentValue
+            }
+    }
 }
 
 private struct StudyReadingHintButton: View {
@@ -154,7 +164,7 @@ private struct StudyReadingHintButton: View {
     let session: StudySession
 
     var body: some View {
-        let hasReading = card.readingValue != nil
+        let hasReading = card.studyReadingHint != nil
 
         return Button {
             withAnimation(.easeInOut(duration: 0.2)) {
@@ -164,7 +174,7 @@ private struct StudyReadingHintButton: View {
             HStack(spacing: 6) {
                 Image(systemName: session.showReading ? "eye.slash" : "eye")
                     .font(.caption)
-                Text(session.showReading ? "발음 숨기기" : "길게 눌러 발음 표시")
+                Text(session.showReading ? "읽기 숨기기" : "읽기 힌트 표시")
                     .font(.caption)
             }
             .foregroundStyle(.secondary)
@@ -245,17 +255,14 @@ private struct CardFaceView: View {
     }
 
     private var frontContent: some View {
-        VStack(spacing: 12) {
-            Text(deckSectionLabel)
-                .font(.caption)
-                .foregroundStyle(.tertiary)
-
+        VStack(spacing: 14) {
+            Spacer()
             Text(card.primaryDisplayValue)
                 .font(.system(size: 64, weight: .bold))
                 .minimumScaleFactor(0.5)
                 .multilineTextAlignment(.center)
 
-            if showReading, let reading = card.readingValue {
+            if showReading, let reading = card.studyReadingHint {
                 Text(reading)
                     .font(.title3)
                     .foregroundStyle(Color.accentColor)
@@ -263,17 +270,13 @@ private struct CardFaceView: View {
             }
 
             Spacer()
-
-            Text("탭하여 뒤집기")
-                .font(.caption2)
-                .foregroundStyle(Color(.quaternaryLabel))
         }
         .padding(28)
     }
 
     private var backContent: some View {
         VStack(spacing: 16) {
-            Text(card.type == .word ? "의미 · Meaning" : "상세 · Details")
+            Text("뜻 · 예문")
                 .font(.caption)
                 .foregroundStyle(.tertiary)
 
@@ -288,20 +291,13 @@ private struct CardFaceView: View {
     }
 
     private var wordBackContent: some View {
-        VStack(spacing: 10) {
-            Text(card.primaryDisplayValue)
-                .font(.system(size: 40, weight: .bold))
-            if let reading = card.readingValue {
-                Text(reading)
-                    .font(.title3)
-                    .foregroundStyle(Color.accentColor)
-            }
+        VStack(spacing: 12) {
             if let meaning = card.meaningValue {
                 Text(meaning)
                     .font(.title2)
                     .multilineTextAlignment(.center)
             }
-            if let example = card.field(named: "example") {
+            if let example = card.exampleValue {
                 Text(example)
                     .font(.footnote)
                     .foregroundStyle(.secondary)
@@ -309,35 +305,34 @@ private struct CardFaceView: View {
                     .multilineTextAlignment(.center)
                     .padding(.top, 4)
             }
+            if card.meaningValue == nil && card.exampleValue == nil {
+                Text("뜻과 예문이 없습니다.")
+                    .font(.body)
+                    .foregroundStyle(.secondary)
+            }
         }
     }
 
     private var kanjiBackContent: some View {
-        VStack(spacing: 10) {
-            Text(card.primaryDisplayValue)
-                .font(.system(size: 56, weight: .bold))
+        VStack(spacing: 12) {
             if let meaning = card.meaningValue {
                 Text(meaning)
                     .font(.title3)
                     .multilineTextAlignment(.center)
             }
-            HStack(spacing: 32) {
-                VStack(spacing: 4) {
-                    Text("音読み")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                    Text(card.field(named: "onyomi") ?? "—")
-                        .font(.body.bold())
-                }
-                VStack(spacing: 4) {
-                    Text("訓読み")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                    Text(card.field(named: "kunyomi") ?? "—")
-                        .font(.body.bold())
-                }
+            if let example = card.exampleValue {
+                Text(example)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .italic()
+                    .multilineTextAlignment(.center)
+                    .padding(.top, 4)
             }
-            .padding(.top, 4)
+            if card.meaningValue == nil && card.exampleValue == nil {
+                Text("뜻과 예문이 없습니다.")
+                    .font(.body)
+                    .foregroundStyle(.secondary)
+            }
         }
     }
 

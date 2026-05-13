@@ -9,6 +9,7 @@ struct CardsView: View {
     @State private var searchText = ""
     @State private var selectedDeckID: UUID?
     @State private var showAddCard = false
+    @State private var showPresetImport = false
     @State private var editingCard: Card?
 
     // MARK: - Filtered cards
@@ -54,6 +55,14 @@ struct CardsView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
+                        showPresetImport = true
+                    } label: {
+                        Image(systemName: "square.and.arrow.down")
+                    }
+                    .accessibilityLabel("프리셋 가져오기")
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
                         showAddCard = true
                     } label: {
                         Image(systemName: "plus")
@@ -62,6 +71,9 @@ struct CardsView: View {
             }
             .sheet(isPresented: $showAddCard) {
                 CardEditView()
+            }
+            .sheet(isPresented: $showPresetImport) {
+                PresetImportView()
             }
             .sheet(item: $editingCard) { card in
                 CardEditView(editingCard: card)
@@ -116,7 +128,7 @@ struct CardsView: View {
                 )
             },
             description: {
-                Text(searchText.isEmpty ? "오른쪽 위 + 버튼으로 카드를 추가하세요." : "다른 검색어를 시도해보세요.")
+                Text(searchText.isEmpty ? "프리셋을 가져오거나 오른쪽 위 + 버튼으로 카드를 추가하세요." : "다른 검색어를 시도해보세요.")
             }
         )
         .listRowSeparator(.hidden)
