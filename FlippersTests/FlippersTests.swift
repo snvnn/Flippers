@@ -486,13 +486,15 @@ struct PresetImportServiceTests {
     }
 
     @Test func defaultVocabularyPreset_hasRequiredFrontHintAndBackFields() {
-        let preset = DefaultPresetCatalog.basicVocabularyStarter
+        let preset = try! BundlePresetCatalog.decodePreset(Self.basicVocabularyPresetData).definition
 
         #expect(preset.cards.count == 10)
         #expect(preset.expectedCardCount == 10)
+        #expect(preset.sourceLabel == "Flippers authored content")
 
         for card in preset.cards {
             #expect(card.type == .word)
+            #expect(card.sourceLabel == "Flippers authored content")
             #expect(card.fields.contains { $0.name == "word" && !$0.value.isEmpty })
             #expect(card.fields.contains { $0.name == "reading" && !$0.value.isEmpty })
             #expect(card.fields.contains { $0.name == "meaning" && !$0.value.isEmpty })
@@ -502,7 +504,7 @@ struct PresetImportServiceTests {
 
     @Test func importPreset_createsDeckCardsSRSAndSkipsDuplicates() throws {
         let context = try makeModelContext()
-        let preset = DefaultPresetCatalog.basicVocabularyStarter
+        let preset = try BundlePresetCatalog.decodePreset(Self.basicVocabularyPresetData).definition
 
         let firstResult = PresetImportService.importPreset(
             preset,
@@ -518,6 +520,7 @@ struct PresetImportServiceTests {
         #expect(decks.count == 1)
         #expect(cards.allSatisfy { $0.createdSource == .imported })
         #expect(cards.allSatisfy { $0.presetVersion == preset.version })
+        #expect(cards.allSatisfy { $0.sourceLabel == "Flippers authored content" })
         #expect(cards.allSatisfy { $0.srsState != nil })
 
         let secondResult = PresetImportService.importPreset(
@@ -533,6 +536,120 @@ struct PresetImportServiceTests {
         #expect(cards.count == preset.cards.count)
         #expect(decks.count == 1)
     }
+
+    private static let basicVocabularyPresetData = """
+    {
+      "cards": [
+        {
+          "example": "学校に行きます。 / 학교에 갑니다.",
+          "meaning": "학교",
+          "presetID": "basic-vocabulary-v1-0001",
+          "presetVersion": 1,
+          "reading": "がっこう",
+          "sourceLabel": "Flippers authored content",
+          "type": "word",
+          "word": "学校"
+        },
+        {
+          "example": "先生に質問します。 / 선생님께 질문합니다.",
+          "meaning": "선생님",
+          "presetID": "basic-vocabulary-v1-0002",
+          "presetVersion": 1,
+          "reading": "せんせい",
+          "sourceLabel": "Flippers authored content",
+          "type": "word",
+          "word": "先生"
+        },
+        {
+          "example": "日本語を勉強します。 / 일본어를 공부합니다.",
+          "meaning": "공부",
+          "presetID": "basic-vocabulary-v1-0003",
+          "presetVersion": 1,
+          "reading": "べんきょう",
+          "sourceLabel": "Flippers authored content",
+          "type": "word",
+          "word": "勉強"
+        },
+        {
+          "example": "時間があります。 / 시간이 있습니다.",
+          "meaning": "시간",
+          "presetID": "basic-vocabulary-v1-0004",
+          "presetVersion": 1,
+          "reading": "じかん",
+          "sourceLabel": "Flippers authored content",
+          "type": "word",
+          "word": "時間"
+        },
+        {
+          "example": "今日は忙しいです。 / 오늘은 바쁩니다.",
+          "meaning": "오늘",
+          "presetID": "basic-vocabulary-v1-0005",
+          "presetVersion": 1,
+          "reading": "きょう",
+          "sourceLabel": "Flippers authored content",
+          "type": "word",
+          "word": "今日"
+        },
+        {
+          "example": "明日また来ます。 / 내일 다시 옵니다.",
+          "meaning": "내일",
+          "presetID": "basic-vocabulary-v1-0006",
+          "presetVersion": 1,
+          "reading": "あした",
+          "sourceLabel": "Flippers authored content",
+          "type": "word",
+          "word": "明日"
+        },
+        {
+          "example": "友達と話します。 / 친구와 이야기합니다.",
+          "meaning": "친구",
+          "presetID": "basic-vocabulary-v1-0007",
+          "presetVersion": 1,
+          "reading": "ともだち",
+          "sourceLabel": "Flippers authored content",
+          "type": "word",
+          "word": "友達"
+        },
+        {
+          "example": "電車に乗ります。 / 전철을 탑니다.",
+          "meaning": "전철, 기차",
+          "presetID": "basic-vocabulary-v1-0008",
+          "presetVersion": 1,
+          "reading": "でんしゃ",
+          "sourceLabel": "Flippers authored content",
+          "type": "word",
+          "word": "電車"
+        },
+        {
+          "example": "朝ご飯を食べます。 / 아침밥을 먹습니다.",
+          "meaning": "먹다",
+          "presetID": "basic-vocabulary-v1-0009",
+          "presetVersion": 1,
+          "reading": "たべる",
+          "sourceLabel": "Flippers authored content",
+          "type": "word",
+          "word": "食べる"
+        },
+        {
+          "example": "映画を見ます。 / 영화를 봅니다.",
+          "meaning": "보다",
+          "presetID": "basic-vocabulary-v1-0010",
+          "presetVersion": 1,
+          "reading": "みる",
+          "sourceLabel": "Flippers authored content",
+          "type": "word",
+          "word": "見る"
+        }
+      ],
+      "expectedCardCount": 10,
+      "exportMode": "production",
+      "id": "basic-vocabulary-v1",
+      "sourceLabel": "Flippers authored content",
+      "subtitle": "초기 학습용 일본어 기본 단어 세트",
+      "title": "기본 단어",
+      "version": 1
+    }
+    """.data(using: .utf8)!
 }
 
 struct OCRRowParserTests {

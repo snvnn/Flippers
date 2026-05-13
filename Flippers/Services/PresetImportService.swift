@@ -38,7 +38,7 @@ enum PresetImportService {
             card.deck = deck
             card.presetID = presetCard.presetID
             card.presetVersion = preset.version
-            card.sourceLabel = preset.title
+            card.sourceLabel = presetCard.sourceLabel
             context.insert(card)
 
             for (index, field) in presetCard.fields.enumerated() {
