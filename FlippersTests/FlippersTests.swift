@@ -485,8 +485,32 @@ struct PresetImportServiceTests {
         return ModelContext(container)
     }
 
-    @Test func defaultVocabularyPreset_hasRequiredFrontHintAndBackFields() {
-        let preset = try! BundlePresetCatalog.decodePreset(Self.basicVocabularyPresetData).definition
+    @Test func bundledProductionPresets_loadExpectedCounts() throws {
+        let basicPreset = try bundledPreset(id: "basic-vocabulary-v1")
+        let jouyouPreset = try bundledPreset(id: "jouyou-kanji-v1")
+
+        #expect(basicPreset.cards.count == 10)
+        #expect(basicPreset.expectedCardCount == 10)
+        #expect(basicPreset.isComplete)
+        #expect(jouyouPreset.cards.count == 2136)
+        #expect(jouyouPreset.expectedCardCount == 2136)
+        #expect(jouyouPreset.isComplete)
+        #expect(Set(basicPreset.cards.map(\.presetID)).count == basicPreset.cards.count)
+        #expect(Set(jouyouPreset.cards.map(\.presetID)).count == jouyouPreset.cards.count)
+        #expect(jouyouPreset.cards.allSatisfy { $0.type == .kanji })
+        #expect(jouyouPreset.cards.allSatisfy { card in
+            let hasKanji = card.fields.contains { $0.name == "kanji" && !$0.value.isEmpty }
+            let hasMeaning = card.fields.contains { $0.name == "meaning" && !$0.value.isEmpty }
+            let hasExample = card.fields.contains { $0.name == "example" && !$0.value.isEmpty }
+            let hasReading = card.fields.contains {
+                ($0.name == "onyomi" || $0.name == "kunyomi") && !$0.value.isEmpty
+            }
+            return hasKanji && hasMeaning && hasExample && hasReading
+        })
+    }
+
+    @Test func defaultVocabularyPreset_hasRequiredFrontHintAndBackFields() throws {
+        let preset = try bundledPreset(id: "basic-vocabulary-v1")
 
         #expect(preset.cards.count == 10)
         #expect(preset.expectedCardCount == 10)
@@ -504,7 +528,7 @@ struct PresetImportServiceTests {
 
     @Test func importPreset_createsDeckCardsSRSAndSkipsDuplicates() throws {
         let context = try makeModelContext()
-        let preset = try BundlePresetCatalog.decodePreset(Self.basicVocabularyPresetData).definition
+        let preset = try bundledPreset(id: "basic-vocabulary-v1")
 
         let firstResult = PresetImportService.importPreset(
             preset,
@@ -537,119 +561,9 @@ struct PresetImportServiceTests {
         #expect(decks.count == 1)
     }
 
-    private static let basicVocabularyPresetData = """
-    {
-      "cards": [
-        {
-          "example": "学校に行きます。 / 학교에 갑니다.",
-          "meaning": "학교",
-          "presetID": "basic-vocabulary-v1-0001",
-          "presetVersion": 1,
-          "reading": "がっこう",
-          "sourceLabel": "Flippers authored content",
-          "type": "word",
-          "word": "学校"
-        },
-        {
-          "example": "先生に質問します。 / 선생님께 질문합니다.",
-          "meaning": "선생님",
-          "presetID": "basic-vocabulary-v1-0002",
-          "presetVersion": 1,
-          "reading": "せんせい",
-          "sourceLabel": "Flippers authored content",
-          "type": "word",
-          "word": "先生"
-        },
-        {
-          "example": "日本語を勉強します。 / 일본어를 공부합니다.",
-          "meaning": "공부",
-          "presetID": "basic-vocabulary-v1-0003",
-          "presetVersion": 1,
-          "reading": "べんきょう",
-          "sourceLabel": "Flippers authored content",
-          "type": "word",
-          "word": "勉強"
-        },
-        {
-          "example": "時間があります。 / 시간이 있습니다.",
-          "meaning": "시간",
-          "presetID": "basic-vocabulary-v1-0004",
-          "presetVersion": 1,
-          "reading": "じかん",
-          "sourceLabel": "Flippers authored content",
-          "type": "word",
-          "word": "時間"
-        },
-        {
-          "example": "今日は忙しいです。 / 오늘은 바쁩니다.",
-          "meaning": "오늘",
-          "presetID": "basic-vocabulary-v1-0005",
-          "presetVersion": 1,
-          "reading": "きょう",
-          "sourceLabel": "Flippers authored content",
-          "type": "word",
-          "word": "今日"
-        },
-        {
-          "example": "明日また来ます。 / 내일 다시 옵니다.",
-          "meaning": "내일",
-          "presetID": "basic-vocabulary-v1-0006",
-          "presetVersion": 1,
-          "reading": "あした",
-          "sourceLabel": "Flippers authored content",
-          "type": "word",
-          "word": "明日"
-        },
-        {
-          "example": "友達と話します。 / 친구와 이야기합니다.",
-          "meaning": "친구",
-          "presetID": "basic-vocabulary-v1-0007",
-          "presetVersion": 1,
-          "reading": "ともだち",
-          "sourceLabel": "Flippers authored content",
-          "type": "word",
-          "word": "友達"
-        },
-        {
-          "example": "電車に乗ります。 / 전철을 탑니다.",
-          "meaning": "전철, 기차",
-          "presetID": "basic-vocabulary-v1-0008",
-          "presetVersion": 1,
-          "reading": "でんしゃ",
-          "sourceLabel": "Flippers authored content",
-          "type": "word",
-          "word": "電車"
-        },
-        {
-          "example": "朝ご飯を食べます。 / 아침밥을 먹습니다.",
-          "meaning": "먹다",
-          "presetID": "basic-vocabulary-v1-0009",
-          "presetVersion": 1,
-          "reading": "たべる",
-          "sourceLabel": "Flippers authored content",
-          "type": "word",
-          "word": "食べる"
-        },
-        {
-          "example": "映画を見ます。 / 영화를 봅니다.",
-          "meaning": "보다",
-          "presetID": "basic-vocabulary-v1-0010",
-          "presetVersion": 1,
-          "reading": "みる",
-          "sourceLabel": "Flippers authored content",
-          "type": "word",
-          "word": "見る"
-        }
-      ],
-      "expectedCardCount": 10,
-      "exportMode": "production",
-      "id": "basic-vocabulary-v1",
-      "sourceLabel": "Flippers authored content",
-      "subtitle": "초기 학습용 일본어 기본 단어 세트",
-      "title": "기본 단어",
-      "version": 1
+    private func bundledPreset(id: String) throws -> PresetDefinition {
+        try #require(DefaultPresetCatalog.presets.first { $0.id == id })
     }
-    """.data(using: .utf8)!
 }
 
 struct OCRRowParserTests {

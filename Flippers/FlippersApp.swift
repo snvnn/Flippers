@@ -25,7 +25,11 @@ struct FlippersApp: App {
             ReviewLog.self,
             OCRSource.self,
         ])
+        #if DEBUG
+        let config = ModelConfiguration(schema: schema)
+        #else
         let config = ModelConfiguration(schema: schema, cloudKitDatabase: .automatic)
+        #endif
         do {
             container = try ModelContainer(for: schema, configurations: [config])
         } catch {
